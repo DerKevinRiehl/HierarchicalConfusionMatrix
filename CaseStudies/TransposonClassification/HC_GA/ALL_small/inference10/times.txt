@@ -1,0 +1,5 @@
+--------------- Training time ---------------
+Milliseconds = 1794966.0
+Seconds = 1794.966
+Minutes = 29.9161
+Hours = 0.49860166666666667
