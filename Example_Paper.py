@@ -1,7 +1,7 @@
 # Imports
 import networkx as nx
 import matplotlib.pyplot as plt
-from HierarchicalConfusion import determineHierarchicalConfusionMatrix
+from HierarchicalConfusion import determineHierarchicalConfusionMatrix, printHierarchicalConfusionMatrix
 
 ######################################################
 ####### (A) Exemplary (T, SPL, MLNP) problem #########
@@ -99,19 +99,18 @@ Confusion_matrix_D2 = determineHierarchicalConfusionMatrix(G_D, trueLabels, P_d2
 ######################################################
 ###### Print Hierarchical Confusion Matrices #########
 ######################################################
-print("A0",Confusion_matrix_A0)
-print("A1",Confusion_matrix_A1)
-print("A2",Confusion_matrix_A2)
-print("B0",Confusion_matrix_B0)
-print("B1",Confusion_matrix_B1)
-print("B2",Confusion_matrix_B2)
-print("C0",Confusion_matrix_C0)
-print("C1",Confusion_matrix_C1)
-print("C2",Confusion_matrix_C2)
-print("D0",Confusion_matrix_D0)
-print("D1",Confusion_matrix_D1)
-print("D2",Confusion_matrix_D2)
-
+printHierarchicalConfusionMatrix(Confusion_matrix_A0, "Problem A, Prediction 0")
+printHierarchicalConfusionMatrix(Confusion_matrix_A1, "Problem A, Prediction 1")
+printHierarchicalConfusionMatrix(Confusion_matrix_A2, "Problem A, Prediction 2")
+printHierarchicalConfusionMatrix(Confusion_matrix_B0, "Problem B, Prediction 0")
+printHierarchicalConfusionMatrix(Confusion_matrix_B1, "Problem B, Prediction 1")
+printHierarchicalConfusionMatrix(Confusion_matrix_B2, "Problem B, Prediction 2")
+printHierarchicalConfusionMatrix(Confusion_matrix_C0, "Problem C, Prediction 0")
+printHierarchicalConfusionMatrix(Confusion_matrix_C1, "Problem C, Prediction 1")
+printHierarchicalConfusionMatrix(Confusion_matrix_C2, "Problem C, Prediction 2")
+printHierarchicalConfusionMatrix(Confusion_matrix_D0, "Problem D, Prediction 0")
+printHierarchicalConfusionMatrix(Confusion_matrix_D1, "Problem D, Prediction 1")
+printHierarchicalConfusionMatrix(Confusion_matrix_D2, "Problem D, Prediction 2")
 
 
 

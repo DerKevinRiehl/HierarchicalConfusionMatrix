@@ -132,3 +132,12 @@ def determineHierarchicalConfusionMatrix(G, trueLabels, P_d):
         for key in W_dj:
             Confusion_matrix[3] += getShortestPathLength(W_dj[key])
     return Confusion_matrix
+
+def printHierarchicalConfusionMatrix(mat, title=""):
+    if(not title==""):
+        print(">>> HierarchicalConfusionMatrix ",title)
+    print("\tTP\t",mat[0])
+    print("\tTN\t",mat[1])
+    print("\tFP\t",mat[2])
+    print("\tFN\t",mat[3])
+    
