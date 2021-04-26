@@ -23,7 +23,7 @@ conda install -c anaconda networkx
 ```
 pip install networkx
 ```
-* Moreover we use [numpy](https://anaconda.org/anaconda/numpy) package. It can be easily installed using conda or pip.
+* Moreover we use the [numpy](https://anaconda.org/anaconda/numpy) package. It can be easily installed using conda or pip.
 ```
 conda install -c anaconda numpy 
 ```
@@ -35,7 +35,7 @@ pip install numpy
 Let us take the four examples from the figure above that was taken from the paper.
 The core method of the implementation *determineHierarchicalConfusionMatrix(G, trueLabels, P_d)* in HierarchicalConfusion.py needs three arguments, a graph, a list of true labels and a list of prediction paths. As a result, it returns a numpy array with four elements, including true positives (TP), true negatives (TN), false positives (FP) and false negatives (FN) in this order.
 For the first problem shown in Fig. (a), in which the true label is node "I", we can calculate the hierarchical confusion matrix for different predictions (x, 1, and 2) as follows:
-```
+```python
 # Imports
 import networkx as nx
 from HierarchicalConfusion import determineHierarchicalConfusionMatrix, printHierarchicalConfusionMatrix
@@ -62,6 +62,25 @@ printHierarchicalConfusionMatrix(Confusion_matrix_A0, "Problem A, Prediction 0")
 printHierarchicalConfusionMatrix(Confusion_matrix_A1, "Problem A, Prediction 1")
 printHierarchicalConfusionMatrix(Confusion_matrix_A2, "Problem A, Prediction 2")
 ```
+**Console Output:**
+```console
+HierarchicalConfusionMatrix  Problem A, Prediction 0
+	TP	 3
+	TN	 5
+	FP	 0
+	FN	 0
+HierarchicalConfusionMatrix  Problem A, Prediction 1
+	TP	 2
+	TN	 4
+	FP	 1
+	FN	 1
+HierarchicalConfusionMatrix  Problem A, Prediction 2
+	TP	 1
+	TN	 2
+	FP	 2
+	FN	 2
+```
+
 Further examples for the other three problems of the figure can be found in *Example_Paper.py*.
 These examples show the calculation of the hierarchical confusion matrix for one single object of a dataset.
 
