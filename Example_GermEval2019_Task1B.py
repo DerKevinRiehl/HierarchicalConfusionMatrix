@@ -11,7 +11,7 @@
 import os
 import numpy as np
 import networkx as nx
-from HierarchicalConfusion import determineHierarchicalConfusionMatrix, getLeafNode
+from hierarchical_confusion_matrix import determineHierarchicalConfusionMatrix, getLeafNode
 
 # Methods
 """
