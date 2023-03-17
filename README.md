@@ -21,7 +21,7 @@ This GitHub consists of following parts...
 
 ## Installation using Pip
 ```
-pip install numpy, networkx, hierarchical-confusion-matrix
+pip install numpy networkx hierarchical-confusion-matrix
 ```
 
 ## Exemplary use
@@ -51,9 +51,9 @@ confusion_matrix_a1 = determineHierarchicalConfusionMatrix(graph, true_labels, p
 confusion_matrix_a2 = determineHierarchicalConfusionMatrix(graph, true_labels, p_d2)
 
 # Print results
-printHierarchicalConfusionMatrix(Confusion_matrix_a0, "Problem A, Prediction 0")
-printHierarchicalConfusionMatrix(Confusion_matrix_a1, "Problem A, Prediction 1")
-printHierarchicalConfusionMatrix(Confusion_matrix_a2, "Problem A, Prediction 2")
+printHierarchicalConfusionMatrix(confusion_matrix_a0, "Problem A, Prediction 0")
+printHierarchicalConfusionMatrix(confusion_matrix_a1, "Problem A, Prediction 1")
+printHierarchicalConfusionMatrix(confusion_matrix_a2, "Problem A, Prediction 2")
 ```
 **Console Output:**
 ```console
