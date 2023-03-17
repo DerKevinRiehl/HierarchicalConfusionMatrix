@@ -21,7 +21,7 @@ This GitHub consists of following parts...
 
 ## Installation using Pip
 ```
-pip install numpy, networkx
+pip install numpy, networkx, hierarchical-confusion-matrix
 ```
 
 ## Exemplary use
