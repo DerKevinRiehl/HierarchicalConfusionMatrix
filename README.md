@@ -31,7 +31,7 @@ For the first problem shown in Fig.4 (a), in which the true label is node "I", w
 ```python
 # Imports
 import networkx as nx
-from HierarchicalConfusion import determineHierarchicalConfusionMatrix, printHierarchicalConfusionMatrix
+from hierarchical_confusion_matrix import determineHierarchicalConfusionMatrix, printHierarchicalConfusionMatrix
 
 # Generate strucutre = tree graph
 graph = nx.DiGraph()
