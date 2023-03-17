@@ -128,10 +128,6 @@ def getShortestPathLength(paths):
             shortest_path = path
     return len(shortest_path)-1
 
-
-
-
-
 """
 This method prints the hierarchical confusion matrix to the console.
 """
@@ -142,7 +138,6 @@ def printHierarchicalConfusionMatrix(mat, title=""):
     print("\tTN\t",mat[1])
     print("\tFP\t",mat[2])
     print("\tFN\t",mat[3])
-
 
 """
 This method returns a list of descendants of a given node t in a graph.
