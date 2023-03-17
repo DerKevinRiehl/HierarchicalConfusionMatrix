@@ -1,2 +1,1 @@
-from .HierarchicalConfusion import determineHierarchicalConfusionMatrix
-from .HierarchicalConfusion import printHierarchicalConfusionMatrix
+from .HierarchicalConfusion import *
