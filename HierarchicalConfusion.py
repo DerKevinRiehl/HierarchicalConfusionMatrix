@@ -2,137 +2,139 @@
 import networkx as nx
 import numpy as np
 
+
+
+
 # Methods
-def drawPath(g1, pos, path, color, width):
-    for i in range(0,len(path)-1):
-        nx.draw_networkx_edges(g1, pos=pos,edgelist=[(path[i],path[i+1])], edge_color=color, width=width)
-
-def getIntersection(truePath, predPath):
-    commonPath = []
-    for n in truePath:
-        if n in predPath:
-            commonPath.append(n)
-    return commonPath
-
-def getCommonPath(truePath, predPath):
-    commonPath = []
-    for n in truePath:
-        if n in predPath:
-            commonPath.append(n)
+"""
+This method determines the hierarchical confusion matrix for a given problem with structure "graph", true labels "true_labels" and prediction "pred_labels".
+"""
+def determineHierarchicalConfusionMatrix(graph, true_labels, pred_labels):
+    confusion_hk = []
+    pred_labels, w_dj = generateSortedPredictions(graph, true_labels, pred_labels) # Includes Step 1 and 2
+    for pred_path in pred_labels:  # Step 3
+        if (len(w_dj.keys())==0): # Step 3.1
+            confusion_hk.append([0, 0, len(pred_path)-1, 0])
         else:
-            break
-    return commonPath
+            m_max = -1
+            sel_true_path = ""
+            sel_true_label = ""
+            for n in w_dj:
+                for p in w_dj[n]:
+                    m_val = len(getCommonPath(p,pred_path))
+                    if(m_val > m_max):
+                        m_max = m_val
+                        sel_true_label = n # Step 3.2
+                        sel_true_path  = p
+            confusion_hk.append(getHierarchicalConfusion_Tree_SPL_MLNP(graph, sel_true_path, pred_path)) # Step 3.3
+            del w_dj[sel_true_label] # Step 3.4
+    confusion_matrix = np.sum(np.asarray(confusion_hk), axis=0) # Step 4
+    if(len(w_dj.keys())!=0):
+        for key in w_dj:
+            confusion_matrix[3] += getShortestPathLength(w_dj[key])
+    return confusion_matrix
+    
+"""
+This method returns the predictions in sorted order with true paths w_dj and M values.
+"""
+def generateSortedPredictions(graph, true_labels, pred_labels):
+    w_dj = determineTruePathSet(graph, true_labels)
+    m    = determine_M_Values(pred_labels, w_dj) # Step 1, 2
+    pred_labels = [x for _, x in sorted(zip(m, pred_labels))]
+    m.sort()
+    pred_labels.reverse()
+    m.reverse()
+    return pred_labels, w_dj
 
-def getDescendants(G, t):
-    nodes = []
-    for n in G.neighbors(t):
-        nodes.append(n)
-    return nodes
+"""
+This method determines a set of true paths w_dj from the true_labels.
+"""
+def determineTruePathSet(graph, true_labels):
+    w_dj = {}
+    for node in true_labels:
+        w_dj[node] = []
+        for path in nx.all_simple_paths(graph, source="root", target=node):
+            w_dj[node].append(path)
+    return w_dj
 
-def getAncestors(G, t):
-    nodes = []
-    for n in G.predecessors(t):
-        nodes.append(n)
-    return nodes
-
-def getNeighbors(G, t):
-    ancestors = getAncestors(G, t)
-    nodes = []
-    for a in ancestors:
-        nodes += getDescendants(G, a)
-    while(t in nodes):
-        nodes.remove(t)
-    return nodes
-
-def deleteFromPath(path, toDelete):
-    newPath = path.copy()
-    for n in toDelete:
-        while n in newPath:
-            newPath.remove(n)
-    return newPath
-
-def getLeafNode(path):
-    return path[-1]
-
-def determineTruePathSet(G, trueLabels):
-    W_dj = {}
-    for n in trueLabels:
-        W_dj[n] = []
-        for path in nx.all_simple_paths(G, source="root", target=n):
-            W_dj[n].append(path)
-    return W_dj
-
-def determine_M_Values(P_d, W_dj):
-    M_values = []
-    for path in P_d:
+"""
+This method determines the M values for predictions and true paths w_dj.
+"""
+def determine_M_Values(pred_labels, w_dj):
+    m_values = []
+    for path in pred_labels:
         m_max = -1
-        for n in W_dj:
-            for p in W_dj[n]:
+        for n in w_dj:
+            for p in w_dj[n]:
                 m_val = len(getCommonPath(p,path))
                 if(m_val > m_max):
                     m_max = m_val
-        M_values.append(m_max)
-    return M_values
-    
-def generateSortedPredictions(G, trueLabels, P_d):
-    W_dj = determineTruePathSet(G, trueLabels)
-    M    = determine_M_Values(P_d, W_dj) # Step 1, 2
-    P_d = [x for _, x in sorted(zip(M, P_d))]
-    M.sort()
-    P_d.reverse()
-    M.reverse()
-    return P_d, W_dj
+        m_values.append(m_max)
+    return m_values
 
-def getHierarchical_TrueNegative(G, P_true, P_pred):
-    commonPath = getCommonPath(P_true, P_pred)
-    commonPathNodes  = []
-    for n in commonPath:
-        commonPathNodes += getNeighbors(G, n)
-    commonPathNodes = list(set(deleteFromPath(commonPathNodes, P_true)))
-    relevantDescendants = deleteFromPath(getDescendants(G, getLeafNode(commonPath)), P_true+P_pred)
-    return len(commonPathNodes)+len(relevantDescendants)
-
-def getHierarchicalConfusion_Tree_SPL_MLNP(G, P_true, P_pred):
-    TP_h = len(getIntersection(P_true, P_pred))-1
-    TN_h = getHierarchical_TrueNegative(G, P_true, P_pred)
-    FP_h = len(deleteFromPath(P_pred, P_true))
-    FN_h = len(deleteFromPath(P_true, P_pred))
-    return [TP_h, TN_h, FP_h, FN_h]
-
-def getShortestPathLength(paths):
-    minL = -1
-    shortestPath = []
-    for path in paths:
-        if((minL == -1) or (len(path)<minL)):
-            minL = len(path)
-            shortestPath = path
-    return len(shortestPath)-1
-
-def determineHierarchicalConfusionMatrix(G, trueLabels, P_d):
-    Confusion_hk = []
-    P_d, W_dj = generateSortedPredictions(G, trueLabels, P_d) # Includes Step 1 and 2
-    for predPath in P_d:  # Step 3
-        if (len(W_dj.keys())==0): # Step 3.1
-            Confusion_hk.append([0, 0, len(predPath)-1, 0])
+"""
+This method calculates the common path between true_path and pred_path.
+"""
+def getCommonPath(true_path, pred_path):
+    common_path = []
+    for node in true_path:
+        if node in pred_path:
+            common_path.append(node)
         else:
-            m_max = -1
-            selTruePath = ""
-            selTrueLabel = ""
-            for n in W_dj:
-                for p in W_dj[n]:
-                    m_val = len(getCommonPath(p,predPath))
-                    if(m_val > m_max):
-                        m_max = m_val
-                        selTrueLabel = n # Step 3.2
-                        selTruePath  = p
-            Confusion_hk.append(getHierarchicalConfusion_Tree_SPL_MLNP(G, selTruePath, predPath)) # Step 3.3
-            del W_dj[selTrueLabel] # Step 3.4
-    Confusion_matrix = np.sum(np.asarray(Confusion_hk), axis=0) # Step 4
-    if(len(W_dj.keys())!=0):
-        for key in W_dj:
-            Confusion_matrix[3] += getShortestPathLength(W_dj[key])
-    return Confusion_matrix
+            break
+    return common_path
 
+"""
+This method determines the four values of the confusion matrix TP, TN, FP, FN for two paths path_true and path_pred
+"""
+def getHierarchicalConfusion_Tree_SPL_MLNP(graph, path_true, path_pred):
+    tp_h = len(getCommonPath(path_true, path_pred))-1
+    tn_h = getHierarchical_TrueNegative(graph, path_true, path_pred)
+    fp_h = len(deleteFromPath(path_pred, path_true))
+    fn_h = len(deleteFromPath(path_true, path_pred))
+    return [tp_h, tn_h, fp_h, fn_h]
+
+"""
+This method determines the true negative for two paths path_true and path_pred.
+"""
+def getHierarchical_TrueNegative(graph, path_true, path_pred):
+    common_path = getCommonPath(path_true, path_pred)
+    common_path_nodes  = []
+    for node in common_path:
+        common_path_nodes += getNeighbors(graph, node)
+    common_path_nodes = list(set(deleteFromPath(common_path_nodes, path_true)))
+    relevant_descendants = deleteFromPath(getDescendants(graph, getLeafNode(common_path)), path_true+path_pred)
+    return len(common_path_nodes)+len(relevant_descendants)
+
+"""
+This method determines a new_path from a given path by removing a certain to_delete node.
+"""
+def deleteFromPath(path, to_delete):
+    new_path = path.copy()
+    for node in to_delete:
+        while node in new_path:
+            new_path.remove(node)
+    return new_path
+
+"""
+This method determines the shortest path length amongst a list of given paths.
+"""
+def getShortestPathLength(paths):
+    min_l = -1
+    shortest_path = []
+    for path in paths:
+        if((min_l == -1) or (len(path)<min_l)):
+            min_l = len(path)
+            shortest_path = path
+    return len(shortest_path)-1
+
+
+
+
+
+"""
+This method prints the hierarchical confusion matrix to the console.
+"""
 def printHierarchicalConfusionMatrix(mat, title=""):
     if(not title==""):
         print(">>> HierarchicalConfusionMatrix ",title)
@@ -140,4 +142,47 @@ def printHierarchicalConfusionMatrix(mat, title=""):
     print("\tTN\t",mat[1])
     print("\tFP\t",mat[2])
     print("\tFN\t",mat[3])
-    
+
+
+"""
+This method returns a list of descendants of a given node t in a graph.
+"""
+def getDescendants(graph, t):
+    nodes = []
+    for node in graph.neighbors(t):
+        nodes.append(node)
+    return nodes
+
+"""
+This method returns a list of ancestors of a given node t in a graph.
+"""
+def getAncestors(graph, t):
+    nodes = []
+    for node in graph.predecessors(t):
+        nodes.append(node)
+    return nodes
+
+"""
+This method returns a list of neighbors of a given node t in a graph.
+"""
+def getNeighbors(graph, t):
+    ancestors = getAncestors(graph, t)
+    nodes = []
+    for ancestor in ancestors:
+        nodes += getDescendants(graph, ancestor)
+    while(t in nodes):
+        nodes.remove(t)
+    return nodes
+
+"""
+This method returns the leaf node (deepest node) in a path.
+"""
+def getLeafNode(path):
+    return path[-1]
+        
+"""
+This method 
+"""
+def drawPath(graph, pos, path, color, width):
+    for i in range(0,len(path)-1):
+        nx.draw_networkx_edges(graph, pos=pos,edgelist=[(path[i],path[i+1])], edge_color=color, width=width)

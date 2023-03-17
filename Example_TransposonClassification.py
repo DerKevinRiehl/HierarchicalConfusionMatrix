@@ -12,30 +12,12 @@ import numpy as np
 import networkx as nx
 from HierarchicalConfusion import determineHierarchicalConfusionMatrix
 
-def getSuperiorNode(c):
-    if(not "/" in c):
-        return ""
-    else:
-        parts = c.split("/")
-        newC = ""
-        for p in range(0, len(parts)-1):
-            newC = newC + parts[p] + "/"
-        return newC[:-1]
-    
-def getSuperiorNodes(classes, levels):
-    sNodes = list()
-    for i in range(0,len(classes)):
-        if(not "/" in classes[i]):
-            sNodes.append(list())
-        else:
-            l = list()
-            sup = getSuperiorNode(classes[i])
-            while(sup!=""):
-                l.append(sup)
-                sup = getSuperiorNode(sup)
-            sNodes.append(l)
-    return sNodes
-
+# Methods
+"""
+This method generates the structure / hierarchical taxonomy used in this transposon classification example.
+It returns a graph object, a list of all node labels "classes", a list of the node levels "levels",
+and a list of all superior nodes "s_nodes"
+"""
 def generateStructure():
     # Add edges
     edges = []
@@ -58,34 +40,88 @@ def generateStructure():
     edges.append(["2","2/2"])
     edges.append(["2","2/3"])
     # Convert to Networkx Graph
-    G = nx.DiGraph()
-    G.add_edges_from(edges)
+    graph = nx.DiGraph()
+    graph.add_edges_from(edges)
     # Set of classes and levels
     classes = ["1","1/1","1/1/1","1/1/2","1/1/3","1/2","1/2/1","1/2/2","2","2/1","2/1/1","2/1/2","2/1/3","2/1/4","2/1/5","2/1/6","2/2","2/3"]
     levels  = [1,   2,    3,      3,      3,      2,    3,      3,      1,  2,    3,      3,      3,      3,      3,      3,      2,    2]    
-    sNodes = getSuperiorNodes(classes,levels)
-    return G, classes, levels, sNodes
+    s_nodes = getSuperiorNodes(classes)
+    return graph, classes, levels, s_nodes
 
-def convertLineToBinary(line):
-    parts = []
-    for p in line.replace("\n","").split(" "):
-        if(p!=""):
-            parts.append(float(p))
-    return parts
+"""
+This method determines the superior nodes of all nodes in a given list "classes".
+"""
+def getSuperiorNodes(classes):
+    s_nodes = list()
+    for i in range(0,len(classes)):
+        if(not "/" in classes[i]):
+            s_nodes.append(list())
+        else:
+            l = list()
+            sup = getSuperiorNode(classes[i])
+            while(sup!=""):
+                l.append(sup)
+                sup = getSuperiorNode(sup)
+            s_nodes.append(l)
+    return s_nodes
+
+"""
+This method determines the superior node of a given node "c".
+"c" represents the label of a node, e.g. "1/2/1".
+The superior node therefore can be determined by splitting the last "/" part away.
+Finally, the result would be "1/2".
+"""
+def getSuperiorNode(c):
+    if(not "/" in c):
+        return ""
+    else:
+        parts = c.split("/")
+        new_c = ""
+        for p in range(0, len(parts)-1):
+            new_c = new_c + parts[p] + "/"
+        return new_c[:-1]
     
-def convertBinaryToPredictionLabel(classes, levels, parts):
-    idx = -1
-    level = -1
-    for c in range(0,len(classes)):
-        if(parts[c]==1):
-            if(levels[c]>level):
-                level = levels[c]
-                idx = c
-    return classes[idx]
+"""
+This method loads the transposon classification data from two given files "true_label_file" and "pred_label_file".
+"""
+def loadEvaluationData_TransposonClassification(graph, true_label_file, pred_label_file):
+    true_label_data = loadInferenceData(classes, levels, true_label_file)
+    pred_label_data = loadInferenceData(classes, levels, pred_label_file)
+    eval_label_data = {}
+    for key in range(0,len(true_label_data)):
+        eval_label_data[key] = {}
+        eval_label_data[key]["true"] = [true_label_data[key]]
+        paths = []
+        for p in nx.all_simple_paths(graph, source="root", target=pred_label_data[key]):
+            paths.append(p)
+        eval_label_data[key]["pred"] = [p]
+    return eval_label_data
 
+"""
+This method loads the probability data from a given "file" considering "classes" and "labels".
+"""
+def loadInferenceData(classes, levels, file):
+    labels = []
+    f = open(file,"r")
+    line = f.readline()
+    while line!="" and line!="\n":
+        binary_line_parts = convertProbabilityToBinaryLabel(line, classes, levels, sNodes)
+        calculated_label = convertBinaryToPredictionLabel(classes, levels, binary_line_parts)
+        if(calculated_label != "-"):
+            labels.append(calculated_label)
+        line = f.readline()
+    f.close()
+    return labels
+
+"""
+This method converts the probability data from the TransposonClassification Dataset (values between 0.0 and 1.0 for each node) to binary predictions (1 or 0).
+It does this selecting always the highest probabilites on each level, and all other nodes outside of the path get "0".
+Example input:  "0.9817518248175182 0.9753649635036497 0.0 0.45468369829683697 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0"
+Example output: [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+"""
 def convertProbabilityToBinaryLabel(line, classes, levels, sNodes):    
     threshold = 0
-    probs = convertLineToBinary(line)
+    probs = readProbabilitiesFromLine(line)
     if(len(probs)==0):
         return "-"
     preds = list()
@@ -123,62 +159,62 @@ def convertProbabilityToBinaryLabel(line, classes, levels, sNodes):
             break
     return preds
 
-def loadProbabilityData(classes, levels, file):
-    labels = []
-    f = open(file,"r")
-    line = f.readline()
-    while line!="" and line!="\n":
-        calculatedLabel = convertBinaryToPredictionLabel(classes, levels, convertProbabilityToBinaryLabel(line, classes, levels, sNodes))
-        if(calculatedLabel != "-"):
-            labels.append(calculatedLabel)
-        line = f.readline()
-    f.close()
-    return labels
 
-def loadEvaluationData_TransposonClassification(trueLabel_file, predLabel_file):
-    trueLabel_data = loadProbabilityData(classes, levels, trueLabel_file)
-    predLabel_data = loadProbabilityData(classes, levels, predLabel_file)
-    evalLabel_data = {}
-    for key in range(0,len(trueLabel_data)):
-        evalLabel_data[key] = {}
-        evalLabel_data[key]["true"] = [trueLabel_data[key]]
-        paths = []
-        for p in nx.all_simple_paths(G, source="root", target=predLabel_data[key]):
-            paths.append(p)
-        evalLabel_data[key]["pred"] = [p]
-    return evalLabel_data
+"""
+This method converts a input string "line" into a list of float values by splitting the numbers by whitespace characters.
+Example input:  "0.9817518248175182 0.9753649635036497 0.0 0.45468369829683697 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0"
+Example output: [0.9817518248175182, 0.9753649635036497, 0.0, 0.45468369829683697, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+"""
+def readProbabilitiesFromLine(line):
+    parts = []
+    for p in line.replace("\n","").split(" "):
+        if(p!=""):
+            parts.append(float(p))
+    return parts
+
+"""
+This method converts the binary data from the function convertProbabilityToBinaryLabel() (1s and 0s) to the label names of the taxonomy.
+Example input:  [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Example output: "1/1/2"
+"""
+def convertBinaryToPredictionLabel(classes, levels, parts):
+    idx = -1
+    level = -1
+    for c in range(0,len(classes)):
+        if(parts[c]==1):
+            if(levels[c]>level):
+                level = levels[c]
+                idx = c
+    return classes[idx]
+
+
+    
+
 
 # Generate Structure
-G, classes, levels, sNodes = generateStructure()
+graph, classes, levels, sNodes = generateStructure()
 
-#
+# List all available algorithms in the dataset
 path = "CaseStudies/TransposonClassification"
-algoFolder = os.listdir(os.path.join(path))
+algo_folder = os.listdir(os.path.join(path))
 
-dataSet = "ALL_small/inference10"
-#print("algo\tF1\tPPV\tREC\tACC\tMCC\tTP\tTN\tFP\tFN")
-print("algo\tTP\tTN\tFP\tFN")
-for algo in algoFolder:
-    trueLabel_file = os.path.join(path,algo,dataSet,"truelabels.txt")
-    predLabel_file = os.path.join(path,algo,dataSet,"predictions.txt")
-    evalLabel_data = loadEvaluationData_TransposonClassification(trueLabel_file, predLabel_file)
+# For each algorithm determine hierarchical confusion matrix and evaluation measures (F1, PPV, REC, ACC, MCC)
+print("algo\tF1\tPPV\tREC\tACC\tMCC\tTP\tTN\tFP\tFN")
+for algo in algo_folder: 
+    true_label_file = os.path.join(path,algo, "ALL_small/inference10", "truelabels.txt")
+    pred_label_file = os.path.join(path,algo, "ALL_small/inference10", "predictions.txt")
+    evalLabel_data = loadEvaluationData_TransposonClassification(graph, true_label_file, pred_label_file)
     
     # Predict Confusion Matrix
-    hConfusion = {}
-    hConfusionTotal = []
+    h_confusion = {}
+    h_confusion_total = []
     for key in evalLabel_data:
-        hConfusion[key] = determineHierarchicalConfusionMatrix(G, evalLabel_data[key]["true"], evalLabel_data[key]["pred"])
-        hConfusionTotal.append(hConfusion[key])
-    hConfusionTotal = np.sum(np.asarray(hConfusionTotal),axis=0)
-#    F1 = 2*hConfusionTotal[0]/(2*hConfusionTotal[0]+hConfusionTotal[2]+hConfusionTotal[3])
-#    PPV = hConfusionTotal[0]/(hConfusionTotal[0]+hConfusionTotal[2])
-#    REC = (hConfusionTotal[0])/(hConfusionTotal[0]+hConfusionTotal[3])
-#    ACC = (hConfusionTotal[0]+hConfusionTotal[1])/(hConfusionTotal[0]+hConfusionTotal[1]+hConfusionTotal[2]+hConfusionTotal[3])
-#    MCC = (hConfusionTotal[0]*hConfusionTotal[1]-hConfusionTotal[2]*hConfusionTotal[3])/np.sqrt((hConfusionTotal[0]+hConfusionTotal[2])*(hConfusionTotal[0]+hConfusionTotal[3])*(hConfusionTotal[1]+hConfusionTotal[2])*(hConfusionTotal[1]+hConfusionTotal[3]))
-#    print(algo, "\t", F1, "\t", PPV, "\t", REC, "\t", ACC, "\t", MCC, "\t", hConfusionTotal[0], "\t", hConfusionTotal[1], "\t", hConfusionTotal[2], "\t", hConfusionTotal[3])    
-    print(algo, "\t", hConfusionTotal[0], "\t", hConfusionTotal[1], "\t", hConfusionTotal[2], "\t", hConfusionTotal[3])    
-
-
-## Draw Graph
-#pos = nx.planar_layout(G)
-#nx.draw_networkx(G, pos=pos, arrows=True)
+        h_confusion[key] = determineHierarchicalConfusionMatrix(graph, evalLabel_data[key]["true"], evalLabel_data[key]["pred"])
+        h_confusion_total.append(h_confusion[key])
+    h_confusion_total = np.sum(np.asarray(h_confusion_total),axis=0)
+    F1 = 2*h_confusion_total[0]/(2*h_confusion_total[0]+h_confusion_total[2]+h_confusion_total[3])
+    PPV = h_confusion_total[0]/(h_confusion_total[0]+h_confusion_total[2])
+    REC = (h_confusion_total[0])/(h_confusion_total[0]+h_confusion_total[3])
+    ACC = (h_confusion_total[0]+h_confusion_total[1])/(h_confusion_total[0]+h_confusion_total[1]+h_confusion_total[2]+h_confusion_total[3])
+    MCC = (h_confusion_total[0]*h_confusion_total[1]-h_confusion_total[2]*h_confusion_total[3])/np.sqrt((h_confusion_total[0]+h_confusion_total[2])*(h_confusion_total[0]+h_confusion_total[3])*(h_confusion_total[1]+h_confusion_total[2])*(h_confusion_total[1]+h_confusion_total[3]))
+    print(algo, "\t", F1, "\t", PPV, "\t", REC, "\t", ACC, "\t", MCC, "\t", h_confusion_total[0], "\t", h_confusion_total[1], "\t", h_confusion_total[2], "\t", h_confusion_total[3])    
