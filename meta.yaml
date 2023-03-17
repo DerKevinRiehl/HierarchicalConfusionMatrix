@@ -1,0 +1,13 @@
+package:
+  name: "hierarchical_confusion_matrix"
+  version: "0.0.1"
+
+build:
+  number: 1
+
+about:
+  home: https://github.com/DerKevinRiehl/HierarchicalConfusionMatrix/blob/main/README.md
+  license: GPL3
+  license_family: GPL
+  summary: Hierarchical Confusion Matrix - a novel measure for evaluation of any hierarchical classification problem
+  description: Hierarchical Confusion Matrix - a novel measure for evaluation of any hierarchical classification problem
