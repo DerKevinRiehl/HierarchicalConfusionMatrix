@@ -5,7 +5,7 @@ This GitHub repository includes the implementation of the hierarchical confusion
 
 ## Table of Contents
 * File structure of this GitHub
-* Dependencies
+* Installation using Pip
 * Exemplary use
 * Citations
 
@@ -19,20 +19,9 @@ This GitHub consists of following parts...
   * ![Example_GermEval2019_Task1B](https://github.com/DerKevinRiehl/HierarchicalConfusionMatrix/blob/main/JupyterNotebooks/Example_GermEval2019_Task1B.ipynb) (*Example_GermEval2019_Task1B.py*)
   * A folder *CaseStudies* that include the classification model predictions for the different examples.
 
-## Dependencies
-* We use the [networkx](https://anaconda.org/anaconda/networkx) package for all graph related tasks. It can be easily installed using conda or pip.
+## Installation using Pip
 ```
-conda install -c anaconda networkx 
-```
-```
-pip install networkx
-```
-* Moreover we use the [numpy](https://anaconda.org/anaconda/numpy) package. It can be easily installed using conda or pip.
-```
-conda install -c anaconda numpy 
-```
-```
-pip install numpy
+pip install numpy, networkx
 ```
 
 ## Exemplary use
