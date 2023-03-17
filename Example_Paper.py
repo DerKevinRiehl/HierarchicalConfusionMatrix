@@ -1,7 +1,7 @@
 # Imports
 import networkx as nx
 import matplotlib.pyplot as plt
-from HierarchicalConfusion import determineHierarchicalConfusionMatrix, printHierarchicalConfusionMatrix
+from hierarchical_confusion_matrix import determineHierarchicalConfusionMatrix, printHierarchicalConfusionMatrix
 
 ######################################################
 ####### (A) Exemplary (T, SPL, MLNP) problem #########
