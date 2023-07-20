@@ -1,5 +1,5 @@
 # Hierarchical Confusion Matrix
-This GitHub repository includes the implementation of the hierarchical confusion matrix in Python, that was proposed in [Riehl et al., 2023] Riehl, K., Neunteufel, M., Hemberg, M. (2023). Hierarchical confusion matrix for classification performance evaluation. In revision at Journal of the Royal Statistical Society:Series C..
+This GitHub repository includes the implementation of the hierarchical confusion matrix in Python, that was proposed in [Riehl et al., 2023] Riehl, K., Neunteufel, M., Hemberg, M. (2023). Hierarchical confusion matrix for classification performance evaluation, Journal of the Royal Statistical Society Series C: Applied Statistics, 2023;, qlad057, https://doi.org/10.1093/jrsssc/qlad057
 
 ![Hierarchical Confusion Matrix Examples](https://github.com/DerKevinRiehl/HierarchicalConfusionMatrix/blob/main/ExampleProblems.png)
 
